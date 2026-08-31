@@ -47,3 +47,23 @@ export default function RootLayout() {
     </Stack>
   );
 }
+
+const styles = {
+  center: {
+    flex: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    padding: 20,
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: "600" as const,
+    marginBottom: 10,
+  },
+
+  error: {
+    marginTop: 10,
+    textAlign: "center" as const,
+  },
+};

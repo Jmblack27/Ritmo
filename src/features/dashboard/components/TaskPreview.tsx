@@ -1,31 +1,80 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTasks } from "../../tasks/hooks/useTasks";
 
-export type TaskPreviewData = {
-  id: string;
-  title: string;
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-};
+export function TasksPreview() {
+  const router = useRouter();
 
-type TaskPreviewProps = {
-  task: TaskPreviewData;
-};
+  const { tasks, isLoading, error } = useTasks();
+  console.log("TasksPreview tasks:", tasks);
+  console.log("error tasks:", error);
 
-export function TaskPreview({ task }: TaskPreviewProps) {
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loading}>Loading tasks...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.error}>Unable to load tasks.</Text>
+      </View>
+    );
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Tasks</Text>
+
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyTitle}>No tasks yet</Text>
+
+          <Text style={styles.emptyDescription}>
+            Create your first task and start organizing your day.
+          </Text>
+
+          <Pressable
+            style={styles.button}
+            onPress={() => router.push("../tasks/new")}
+          >
+            <Text style={styles.buttonText}>Create task</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <View
-        style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
-      >
-        {task.completed && <Text style={styles.check}>✓</Text>}
+      <View style={styles.header}>
+        <Text style={styles.title}>Tasks</Text>
+
+        <Pressable onPress={() => router.push("../(tabs)/tasks")}>
+          <Text style={styles.seeAll}>See all</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.content}>
-        <Text style={[styles.title, task.completed && styles.completedTitle]}>
-          {task.title}
-        </Text>
+      <View style={styles.list}>
+        {tasks.slice(0, 3).map((task) => (
+          <View key={task.id} style={styles.task}>
+            <View
+              style={[
+                styles.checkbox,
+                task.completed && styles.checkboxCompleted,
+              ]}
+            />
 
-        <Text style={styles.priority}>{task.priority}</Text>
+            <Text
+              style={[styles.taskTitle, task.completed && styles.taskCompleted]}
+            >
+              {task.title}
+            </Text>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -33,64 +82,91 @@ export function TaskPreview({ task }: TaskPreviewProps) {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 24,
+  },
+
+  header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
 
-    backgroundColor: "#FFFFFF",
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
 
-    borderRadius: 14,
+  seeAll: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
 
-    padding: 16,
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+  },
 
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
     marginBottom: 8,
   },
 
-  checkbox: {
-    width: 22,
-    height: 22,
+  emptyDescription: {
+    textAlign: "center",
+    fontSize: 14,
+    marginBottom: 20,
+  },
 
-    borderRadius: 11,
+  button: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
 
-    borderWidth: 1.5,
-    borderColor: "#CCCCCC",
+  buttonText: {
+    fontWeight: "600",
+  },
 
+  loading: {
+    fontSize: 14,
+  },
+
+  error: {
+    fontSize: 14,
+  },
+
+  list: {
+    gap: 10,
+  },
+
+  task: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: 12,
+  },
 
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderRadius: 6,
     marginRight: 12,
   },
 
   checkboxCompleted: {
-    backgroundColor: "#181818",
-    borderColor: "#181818",
+    opacity: 0.5,
   },
 
-  check: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  content: {
-    flex: 1,
-  },
-
-  title: {
+  taskTitle: {
     fontSize: 16,
-    color: "#222222",
   },
 
-  completedTitle: {
-    color: "#999999",
+  taskCompleted: {
     textDecorationLine: "line-through",
-  },
-
-  priority: {
-    marginTop: 4,
-
-    fontSize: 12,
-    color: "#999999",
-
-    textTransform: "capitalize",
+    opacity: 0.5,
   },
 });

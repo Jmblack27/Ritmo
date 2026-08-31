@@ -1,6 +1,16 @@
-import { drizzle } from "drizzle-orm/expo-sqlite";
-import { openDatabaseSync } from "expo-sqlite";
+import * as SQLite from 'expo-sqlite';
+import { runMigrations } from './migrations';
 
-const sqlite = openDatabaseSync("ritmo.db");
+const DATABASE_NAME = 'ritmo.db';
 
-export const db = drizzle(sqlite);
+let database: SQLite.SQLiteDatabase | null = null;
+
+export async function getDatabase() {
+  if (!database) {
+    database = await SQLite.openDatabaseAsync(DATABASE_NAME);
+
+    await runMigrations(database);
+  }
+
+  return database;
+} 
