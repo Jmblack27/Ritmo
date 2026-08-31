@@ -1,6 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "resolveJsonModule": true,
     "strict": true,
     "paths": {
       "@/*": ["./src/*"],
@@ -12,6 +13,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "babel.config.js"
+    "babel.config.js",
+    "src/features/tasks/types/tasks.types.ts"
   ]
 }

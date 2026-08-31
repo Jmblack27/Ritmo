@@ -5,3 +5,4 @@ export function formatCurrentDate(): string {
     day: "numeric",
   }).format(new Date());
 }
+
