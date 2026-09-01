@@ -1,3 +1,4 @@
+import { useTaskStore } from "@/features/tasks/stores/task.store";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -8,12 +9,10 @@ import {
   View,
 } from "react-native";
 
-import { useTasks } from "../../features/tasks/hooks/useTasks";
-
 export default function TasksScreen() {
   const router = useRouter();
 
-  const { tasks, isLoading, error, toggleTask, deleteTask } = useTasks();
+  const { tasks, isLoading, error, deleteTask, toggleTask } = useTaskStore();
 
   if (isLoading) {
     return (
@@ -70,39 +69,46 @@ export default function TasksScreen() {
           data={tasks}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <View style={styles.task}>
-              <Pressable
-                style={[
-                  styles.checkbox,
-                  item.completed && styles.checkboxCompleted,
-                ]}
-                onPress={() => toggleTask(item)}
-              >
-                {item.completed && <Text style={styles.checkmark}>✓</Text>}
-              </Pressable>
+          renderItem={({ item }) => {
+            const taskPriority =
+              "priority" in item && typeof item.priority === "string"
+                ? item.priority
+                : "normal";
 
-              <Pressable
-                style={styles.taskContent}
-                onPress={() => router.push(`../tasks/${item.id}`)}
-              >
-                <Text
+            return (
+              <View style={styles.task}>
+                <Pressable
                   style={[
-                    styles.taskTitle,
-                    item.completed && styles.completedTitle,
+                    styles.checkbox,
+                    item.completed && styles.checkboxCompleted,
                   ]}
+                  onPress={() => toggleTask(item.id)}
                 >
-                  {item.title}
-                </Text>
+                  {item.completed && <Text style={styles.checkmark}>✓</Text>}
+                </Pressable>
 
-                <Text style={styles.priority}>{item.priority}</Text>
-              </Pressable>
+                <Pressable
+                  style={styles.taskContent}
+                  onPress={() => router.push(`../tasks/${item.id}`)}
+                >
+                  <Text
+                    style={[
+                      styles.taskTitle,
+                      item.completed && styles.completedTitle,
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
 
-              <Pressable onPress={() => deleteTask(item.id)}>
-                <Text style={styles.delete}>Delete</Text>
-              </Pressable>
-            </View>
-          )}
+                  <Text style={styles.priority}>{taskPriority}</Text>
+                </Pressable>
+
+                <Pressable onPress={() => deleteTask(item.id)}>
+                  <Text style={styles.delete}>Delete</Text>
+                </Pressable>
+              </View>
+            );
+          }}
         />
       )}
     </View>
