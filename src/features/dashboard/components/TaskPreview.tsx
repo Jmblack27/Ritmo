@@ -1,13 +1,11 @@
+import { useTaskStore } from "@/features/tasks/stores/task.store";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useTasks } from "../../tasks/hooks/useTasks";
 
 export function TasksPreview() {
   const router = useRouter();
 
-  const { tasks, isLoading, error } = useTasks();
-  console.log("TasksPreview tasks:", tasks);
-  console.log("error tasks:", error);
+  const { tasks, isLoading, error } = useTaskStore();
 
   if (isLoading) {
     return (

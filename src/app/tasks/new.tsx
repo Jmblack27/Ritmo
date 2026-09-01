@@ -1,13 +1,12 @@
+import { useTaskStore } from "@/features/tasks/stores/task.store";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { useTasks } from "../../features/tasks/hooks/useTasks";
-
 export default function NewTaskScreen() {
   const router = useRouter();
 
-  const { createTask } = useTasks();
+  const { createTask } = useTaskStore();
 
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
@@ -24,8 +23,6 @@ export default function NewTaskScreen() {
 
       await createTask({
         title,
-        completed: false,
-        priority,
       });
 
       router.back();

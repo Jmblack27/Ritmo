@@ -1,3 +1,4 @@
+import { useTaskStore } from "@/features/tasks/stores/task.store";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -9,8 +10,6 @@ import {
   View,
 } from "react-native";
 
-import { useTasks } from "../../features/tasks/hooks/useTasks";
-
 type Priority = "low" | "medium" | "high";
 
 export default function TaskDetailScreen() {
@@ -18,20 +17,27 @@ export default function TaskDetailScreen() {
 
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const { tasks, isLoading, updateTask, toggleTask, deleteTask } = useTasks();
+  const tasks = useTaskStore((state) => state.tasks);
+  const isLoading = useTaskStore((state) => state.isLoading);
+  const updateTask = useTaskStore((state) => state.updateTask);
+  const toggleTask = useTaskStore((state) => state.toggleTask);
+  const deleteTask = useTaskStore((state) => state.deleteTask);
 
-  const task = tasks.find((item) => item.id === id);
+  const task = tasks.find((item) => item.id === id) as
+    | ((typeof tasks)[number] & { priority?: Priority })
+    | undefined;
 
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
     if (task) {
       setTitle(task.title);
-      setPriority(task.priority);
+      setPriority(task.priority ?? "medium");
     }
   }, [task]);
 
@@ -65,7 +71,6 @@ export default function TaskDetailScreen() {
 
       await updateTask(task.id, {
         title: title.trim(),
-        priority,
       });
 
       router.back();
@@ -75,7 +80,17 @@ export default function TaskDetailScreen() {
   };
 
   const handleToggle = async () => {
-    await toggleTask(task);
+    if (isToggling) {
+      return;
+    }
+
+    try {
+      setIsToggling(true);
+
+      await toggleTask(task.id);
+    } finally {
+      setIsToggling(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -105,9 +120,13 @@ export default function TaskDetailScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Edit task</Text>
 
-        <Pressable onPress={handleToggle}>
+        <Pressable onPress={handleToggle} disabled={isToggling}>
           <Text style={styles.completeButton}>
-            {task.completed ? "Mark incomplete" : "Complete"}
+            {isToggling
+              ? "Updating..."
+              : task.completed
+                ? "Mark incomplete"
+                : "Complete"}
           </Text>
         </Pressable>
       </View>
@@ -153,7 +172,7 @@ export default function TaskDetailScreen() {
         </Pressable>
 
         <Pressable
-          style={styles.deleteButton}
+          style={[styles.deleteButton, isDeleting && styles.disabledButton]}
           onPress={handleDelete}
           disabled={isDeleting}
         >

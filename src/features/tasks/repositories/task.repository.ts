@@ -1,4 +1,5 @@
 import { getDatabase } from '@/db/client';
+import * as Crypto from 'expo-crypto';
 
 import type {
   CreateTaskInput,
@@ -62,7 +63,7 @@ export async function create(
 ): Promise<Task> {
   const db = await getDatabase();
 
-  const id = crypto.randomUUID();
+  const id = Crypto.randomUUID();
   const now = Date.now();
 
   await db.runAsync(
@@ -86,7 +87,6 @@ export async function create(
     now,
     now,
   );
-
   const task = await findById(id);
 
   if (!task) {
