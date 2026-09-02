@@ -1,143 +1,122 @@
 import { useTaskStore } from "@/features/tasks/stores/task.store";
+import { useAppTheme } from "@/theme/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-
 export default function NewTaskScreen() {
   const router = useRouter();
-
-  const { createTask } = useTaskStore();
-
+  const { colors } = useAppTheme();
+  const createTask = useTaskStore((state) => state.createTask);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
-
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleCreate = async () => {
-    if (!title.trim() || isSaving) {
-      return;
-    }
-
+  const [saving, setSaving] = useState(false);
+  const submit = async () => {
+    if (!title.trim() || saving) return;
     try {
-      setIsSaving(true);
-
-      await createTask({
-        title,
-      });
-
+      setSaving(true);
+      await createTask({ title: title.trim() });
       router.back();
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>New task</Text>
-
-      <Text style={styles.label}>Title</Text>
-
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.kicker, { color: colors.primary }]}>
+        PLAN YOUR NEXT MOVE
+      </Text>
+      <Text style={[styles.title, { color: colors.text }]}>
+        What needs your attention?
+      </Text>
+      <Text style={[styles.label, { color: colors.text }]}>Task title</Text>
       <TextInput
         value={title}
         onChangeText={setTitle}
-        placeholder="What do you need to do?"
-        style={styles.input}
+        placeholder="e.g. Finish the project brief"
+        placeholderTextColor={colors.textMuted}
+        selectionColor={colors.primary}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+        ]}
         autoFocus
       />
-
-      <Text style={styles.label}>Priority</Text>
-
-      <View style={styles.priorityContainer}>
+      <Text style={[styles.label, { color: colors.text }]}>Priority</Text>
+      <View style={styles.priorities}>
         {(["low", "medium", "high"] as const).map((value) => (
           <Pressable
             key={value}
-            style={[
-              styles.priorityButton,
-              priority === value && styles.priorityButtonSelected,
-            ]}
             onPress={() => setPriority(value)}
+            style={[
+              styles.priority,
+              {
+                backgroundColor:
+                  priority === value ? colors.primarySoft : colors.surface,
+                borderColor:
+                  priority === value ? colors.primary : colors.border,
+              },
+            ]}
           >
-            <Text style={styles.priorityText}>{value}</Text>
+            <Text
+              style={{
+                color: priority === value ? colors.primary : colors.textMuted,
+                fontWeight: "600",
+                textTransform: "capitalize",
+              }}
+            >
+              {value}
+            </Text>
           </Pressable>
         ))}
       </View>
-
       <Pressable
+        disabled={!title.trim() || saving}
+        onPress={submit}
         style={[
-          styles.createButton,
-          (!title.trim() || isSaving) && styles.createButtonDisabled,
+          styles.button,
+          { backgroundColor: colors.primary },
+          (!title.trim() || saving) && styles.disabled,
         ]}
-        onPress={handleCreate}
-        disabled={!title.trim() || isSaving}
       >
-        <Text style={styles.createButtonText}>
-          {isSaving ? "Creating..." : "Create task"}
+        <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
+          {saving ? "Creating…" : "Create task"}
         </Text>
       </Pressable>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-
+  container: { flex: 1, padding: 22, paddingTop: 32 },
+  kicker: { fontSize: 11, fontWeight: "800", letterSpacing: 1.2 },
   title: {
     fontSize: 28,
+    lineHeight: 35,
     fontWeight: "700",
-    marginBottom: 32,
+    marginTop: 10,
+    marginBottom: 34,
   },
-
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-
+  label: { fontSize: 14, fontWeight: "700", marginBottom: 9 },
   input: {
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 24,
-    fontSize: 16,
-  },
-
-  priorityContainer: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 32,
-  },
-
-  priorityButton: {
+    borderRadius: 15,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderRadius: 10,
-  },
-
-  priorityButtonSelected: {
-    opacity: 0.6,
-  },
-
-  priorityText: {
-    textTransform: "capitalize",
-  },
-
-  createButton: {
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  createButtonDisabled: {
-    opacity: 0.4,
-  },
-
-  createButtonText: {
+    paddingVertical: 15,
     fontSize: 16,
-    fontWeight: "600",
+    marginBottom: 26,
   },
+  priorities: { flexDirection: "row", gap: 9, marginBottom: 34 },
+  priority: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+  },
+  button: { alignItems: "center", paddingVertical: 16, borderRadius: 15 },
+  buttonText: { fontSize: 16, fontWeight: "700" },
+  disabled: { opacity: 0.4 },
 });
