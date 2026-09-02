@@ -1,5 +1,6 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Greeting } from "@/features/dashboard/components/Greeting";
+import { HabitsPreview } from "@/features/dashboard/components/HabitsPreview";
 import { QuickAddButton } from "@/features/dashboard/components/QuickAddButton";
 import { TasksPreview } from "@/features/dashboard/components/TaskPreview";
 import { useAppTheme } from "@/theme/theme";
@@ -34,6 +35,12 @@ export default function HomeScreen() {
             Today's tasks
           </Text>
           <TasksPreview />
+        </View>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Today's habits
+          </Text>
+          <HabitsPreview />
         </View>
       </ScrollView>
       <QuickAddButton onPress={() => router.push("../tasks/new")} />
