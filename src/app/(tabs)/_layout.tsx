@@ -1,3 +1,4 @@
+import { useHabitStore } from "@/features/habits/stores/habit.store";
 import { useTaskStore } from "@/features/tasks/stores/task.store";
 import { useAppTheme } from "@/theme/theme";
 import { Tabs } from "expo-router";
@@ -8,12 +9,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const loadTasks = useTaskStore((state) => state.loadTasks);
+  const loadHabits = useHabitStore((state) => state.loadHabits);
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+    loadHabits();
+  }, [loadHabits, loadTasks]);
 
   const bottomPadding = Math.max(insets.bottom, 8);
 
@@ -37,35 +40,31 @@ export default function TabsLayout() {
         tabBarLabelStyle: styles.label,
       }}
     >
+
       <Tabs.Screen
         name="index"
         options={{
-          title: "Inicio",
+          title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <SymbolView
-              name={{
-                ios: focused ? "house.fill" : "house",
-                android: "home",
-              }}
-              size={25}
-              tintColor={color}
-            />
+            <SymbolView name={{ ios: focused ? "house.fill" : "house", android: "home" }} size={25} tintColor={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="tasks"
         options={{
-          title: "Tareas",
+          title: "Tasks",
           tabBarIcon: ({ color, focused }) => (
-            <SymbolView
-              name={{
-                ios: focused ? "checklist.checked" : "checklist",
-                android: focused ? "task_alt" : "checklist",
-              }}
-              size={25}
-              tintColor={color}
-            />
+            <SymbolView name={{ ios: focused ? "checklist.checked" : "checklist", android: focused ? "task_alt" : "checklist" }} size={25} tintColor={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="habits"
+        options={{
+          title: "Habits",
+          tabBarIcon: ({ color, focused }) => (
+            <SymbolView name={{ ios: focused ? "repeat.circle.fill" : "repeat.circle", android: focused ? "routine" : "event_repeat" }} size={25} tintColor={color} />
           ),
         }}
       />
@@ -74,15 +73,7 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabItem: {
-    paddingVertical: 2,
-  },
-  icon: {
-    transform: [{ translateY: -2 }],
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 2,
-  },
+  tabItem: { paddingVertical: 2 },
+  icon: { transform: [{ translateY: -2 }] },
+  label: { fontSize: 11, fontWeight: "600", marginTop: 2 },
 });
