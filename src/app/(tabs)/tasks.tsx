@@ -1,4 +1,5 @@
 import { useTaskStore } from "@/features/tasks/stores/task.store";
+import { useAppTheme } from "@/theme/theme";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -8,60 +9,55 @@ import {
   Text,
   View,
 } from "react-native";
-
 export default function TasksScreen() {
   const router = useRouter();
-
+  const { colors } = useAppTheme();
   const { tasks, isLoading, error, deleteTask, toggleTask } = useTaskStore();
-
-  if (isLoading) {
+  if (isLoading)
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
-  }
-
-  if (error) {
+  if (error)
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{error.message}</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.danger }}>{error.message}</Text>
       </View>
     );
-  }
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Tasks</Text>
-
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Tasks</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
           </Text>
         </View>
-
         <Pressable
-          style={styles.addButton}
+          accessibilityLabel="Create task"
+          style={[styles.add, { backgroundColor: colors.primary }]}
           onPress={() => router.push("../tasks/new")}
         >
-          <Text style={styles.addButtonText}>+</Text>
+          <Text style={[styles.plus, { color: colors.onPrimary }]}>+</Text>
         </Pressable>
       </View>
-
-      {tasks.length === 0 ? (
+      {!tasks.length ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>No tasks yet</Text>
-
-          <Text style={styles.emptyDescription}>
-            Create a task to start organizing your day.
+          <Text style={styles.emptyIcon}>✓</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>
+            Nothing on your list
           </Text>
-
+          <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>
+            Make space for what matters today.
+          </Text>
           <Pressable
-            style={styles.createButton}
+            style={[styles.create, { backgroundColor: colors.primary }]}
             onPress={() => router.push("../tasks/new")}
           >
-            <Text style={styles.createButtonText}>Create task</Text>
+            <Text style={{ color: colors.onPrimary, fontWeight: "700" }}>
+              Create task
+            </Text>
           </Pressable>
         </View>
       ) : (
@@ -69,180 +65,111 @@ export default function TasksScreen() {
           data={tasks}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => {
-            const taskPriority =
-              "priority" in item && typeof item.priority === "string"
-                ? item.priority
-                : "normal";
-
-            return (
-              <View style={styles.task}>
-                <Pressable
-                  style={[
-                    styles.checkbox,
-                    item.completed && styles.checkboxCompleted,
-                  ]}
-                  onPress={() => toggleTask(item.id)}
-                >
-                  {item.completed && <Text style={styles.checkmark}>✓</Text>}
-                </Pressable>
-
-                <Pressable
-                  style={styles.taskContent}
-                  onPress={() => router.push(`../tasks/${item.id}`)}
-                >
-                  <Text
-                    style={[
-                      styles.taskTitle,
-                      item.completed && styles.completedTitle,
-                    ]}
-                  >
-                    {item.title}
+          renderItem={({ item }) => (
+            <Pressable
+              style={({ pressed }) => [
+                styles.task,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                pressed && styles.pressed,
+              ]}
+              onPress={() => router.push(`../tasks/${item.id}`)}
+            >
+              <Pressable
+                accessibilityLabel={
+                  item.completed ? "Mark incomplete" : "Mark complete"
+                }
+                style={[
+                  styles.checkbox,
+                  { borderColor: colors.border },
+                  item.completed && {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
+                  },
+                ]}
+                onPress={() => toggleTask(item.id)}
+              >
+                {item.completed && (
+                  <Text style={{ color: colors.onPrimary, fontWeight: "800" }}>
+                    ✓
                   </Text>
-
-                  <Text style={styles.priority}>{taskPriority}</Text>
-                </Pressable>
-
-                <Pressable onPress={() => deleteTask(item.id)}>
-                  <Text style={styles.delete}>Delete</Text>
-                </Pressable>
+                )}
+              </Pressable>
+              <View style={styles.taskContent}>
+                <Text
+                  style={[
+                    styles.taskTitle,
+                    { color: colors.text },
+                    item.completed && styles.done,
+                  ]}
+                >
+                  {item.title}
+                </Text>
+                <Text style={[styles.priority, { color: colors.textMuted }]}>
+                  Medium priority
+                </Text>
               </View>
-            );
-          }}
+              <Pressable hitSlop={10} onPress={() => deleteTask(item.id)}>
+                <Text style={[styles.delete, { color: colors.danger }]}>
+                  Delete
+                </Text>
+              </Pressable>
+            </Pressable>
+          )}
         />
       )}
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: 58 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 24,
   },
-
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-  },
-
-  subtitle: {
-    marginTop: 4,
-    opacity: 0.6,
-  },
-
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  title: { fontSize: 32, fontWeight: "700" },
+  subtitle: { marginTop: 4 },
+  add: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-
-  addButtonText: {
-    fontSize: 28,
-  },
-
-  list: {
-    gap: 12,
-    paddingBottom: 24,
-  },
-
+  plus: { fontSize: 28, marginTop: -2 },
+  list: { gap: 10, paddingBottom: 30 },
   task: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderRadius: 14,
+    padding: 15,
+    borderWidth: 1,
+    borderRadius: 17,
   },
-
   checkbox: {
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderRadius: 7,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
-
-  checkboxCompleted: {
-    opacity: 0.6,
-  },
-
-  checkmark: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  taskContent: {
-    flex: 1,
-  },
-
-  taskTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-
-  completedTitle: {
-    textDecorationLine: "line-through",
-    opacity: 0.5,
-  },
-
-  priority: {
-    marginTop: 4,
-    fontSize: 12,
-    opacity: 0.5,
-    textTransform: "capitalize",
-  },
-
-  delete: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-
+  taskContent: { flex: 1 },
+  taskTitle: { fontSize: 16, fontWeight: "600" },
+  priority: { marginTop: 4, fontSize: 12 },
+  done: { textDecorationLine: "line-through", opacity: 0.5 },
+  delete: { fontSize: 12, fontWeight: "600" },
+  pressed: { opacity: 0.7 },
   empty: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 30,
+    paddingBottom: 80,
   },
-
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
-
-  emptyDescription: {
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 20,
-    opacity: 0.6,
-  },
-
-  createButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-
-  createButtonText: {
-    fontWeight: "600",
-  },
-
-  error: {
-    textAlign: "center",
-  },
+  emptyIcon: { fontSize: 32, marginBottom: 14 },
+  emptyTitle: { fontSize: 21, fontWeight: "700" },
+  emptyCopy: { marginTop: 8, marginBottom: 22 },
+  create: { paddingHorizontal: 20, paddingVertical: 13, borderRadius: 12 },
 });
