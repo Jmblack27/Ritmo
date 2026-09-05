@@ -7,6 +7,10 @@ export function getHabit(id: string) { return habitRepository.findById(id); }
 export function createHabit(input: CreateHabitInput) {
   const name = input.name.trim();
   if (!name) throw new Error("Habit name is required");
+  if (!input.scheduleDays.length) throw new Error("Select at least one day");
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(input.scheduleTime)) {
+    throw new Error("Select a valid time");
+  }
   return habitRepository.create({
     ...input,
     name,
@@ -17,6 +21,12 @@ export function createHabit(input: CreateHabitInput) {
 export function updateHabit(id: string, input: UpdateHabitInput) {
   if (input.name !== undefined && !input.name.trim()) {
     throw new Error("Habit name is required");
+  }
+  if (input.scheduleDays !== undefined && !input.scheduleDays.length) {
+    throw new Error("Select at least one day");
+  }
+  if (input.scheduleTime !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.scheduleTime)) {
+    throw new Error("Select a valid time");
   }
   return habitRepository.update(id, {
     ...input,
