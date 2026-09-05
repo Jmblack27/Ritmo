@@ -1,7 +1,8 @@
 import type * as SQLite from 'expo-sqlite';
 import { migrateV1 } from './v1';
+import { migrateV2 } from './v2';
 
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 export async function runMigrations(
   db: SQLite.SQLiteDatabase,
@@ -14,9 +15,11 @@ export async function runMigrations(
 
   if (currentVersion < 1) {
     await migrateV1(db);
+  }
 
-    await db.execAsync(
-      `PRAGMA user_version = ${DATABASE_VERSION}`,
-    );
+  if (currentVersion < 2) await migrateV2(db);
+
+  if (currentVersion < DATABASE_VERSION) {
+    await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   }
 }

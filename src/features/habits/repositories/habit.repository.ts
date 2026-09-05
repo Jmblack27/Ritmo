@@ -1,11 +1,14 @@
 import { getDatabase } from "@/db/client";
 import * as Crypto from "expo-crypto";
+import { isScheduledToday } from "../lib/schedule";
 
+import { WEEKDAYS } from "../types/habits.types";
 import type {
   CreateHabitInput,
   Habit,
   HabitFrequency,
   UpdateHabitInput,
+  Weekday,
 } from "../types/habits.types";
 
 type HabitRow = {
@@ -13,6 +16,8 @@ type HabitRow = {
   name: string;
   description: string | null;
   frequency: HabitFrequency;
+  schedule_days: string;
+  schedule_time: string;
   completed_today: number;
   created_at: number;
   updated_at: number;
@@ -27,20 +32,44 @@ function getLocalDateKey(date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-function calculateStreak(completions: CompletionRow[]): number {
+function parseScheduleDays(value: string, frequency: HabitFrequency): Weekday[] {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      const days = parsed.filter((day): day is Weekday =>
+        WEEKDAYS.includes(day as Weekday),
+      );
+      if (days.length) return days;
+    }
+  } catch {}
+
+  if (frequency === "weekdays") return WEEKDAYS.slice(0, 5);
+  if (frequency === "weekends") return WEEKDAYS.slice(5);
+  return [...WEEKDAYS];
+}
+
+function weekdayForDate(date: Date): Weekday {
+  return WEEKDAYS[(date.getDay() + 6) % 7];
+}
+
+function calculateStreak(completions: CompletionRow[], scheduleDays: Weekday[]): number {
   if (completions.length === 0) return 0;
 
   const dates = new Set(completions.map((item) => item.date));
+  const scheduled = new Set(scheduleDays);
   const cursor = new Date();
-  const today = getLocalDateKey(cursor);
-
-  if (!dates.has(today)) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
 
   let streak = 0;
-  while (dates.has(getLocalDateKey(cursor))) {
-    streak += 1;
+  let checkedScheduledDays = 0;
+  while (checkedScheduledDays < 3660) {
+    if (scheduled.has(weekdayForDate(cursor))) {
+      checkedScheduledDays += 1;
+      if (!dates.has(getLocalDateKey(cursor))) {
+        if (streak > 0 || getLocalDateKey(cursor) !== getLocalDateKey()) break;
+      } else {
+        streak += 1;
+      }
+    }
     cursor.setDate(cursor.getDate() - 1);
   }
 
@@ -56,13 +85,17 @@ async function mapHabit(row: HabitRow): Promise<Habit> {
     row.id,
   );
 
+  const scheduleDays = parseScheduleDays(row.schedule_days, row.frequency);
+
   return {
     id: row.id,
     name: row.name,
     description: row.description,
     frequency: row.frequency,
+    scheduleDays,
+    scheduleTime: row.schedule_time,
     completedToday: row.completed_today === 1,
-    streak: calculateStreak(completions),
+    streak: calculateStreak(completions, scheduleDays),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -100,12 +133,15 @@ export async function create(input: CreateHabitInput): Promise<Habit> {
   const id = Crypto.randomUUID();
   const now = Date.now();
   await db.runAsync(
-    `INSERT INTO habits (id, name, description, frequency, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO habits (
+       id, name, description, frequency, schedule_days, schedule_time, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     input.name,
     input.description ?? null,
-    input.frequency,
+    frequencyForDays(input.scheduleDays),
+    JSON.stringify(input.scheduleDays),
+    input.scheduleTime,
     now,
     now,
   );
@@ -119,16 +155,27 @@ export async function update(id: string, input: UpdateHabitInput): Promise<Habit
   const current = await findById(id);
   if (!current) throw new Error("Habit not found");
   await db.runAsync(
-    `UPDATE habits SET name = ?, description = ?, frequency = ?, updated_at = ? WHERE id = ?`,
+    `UPDATE habits SET
+       name = ?, description = ?, frequency = ?, schedule_days = ?, schedule_time = ?, updated_at = ?
+     WHERE id = ?`,
     input.name ?? current.name,
     input.description !== undefined ? input.description : current.description,
-    input.frequency ?? current.frequency,
+    frequencyForDays(input.scheduleDays ?? current.scheduleDays),
+    JSON.stringify(input.scheduleDays ?? current.scheduleDays),
+    input.scheduleTime ?? current.scheduleTime,
     Date.now(),
     id,
   );
   const habit = await findById(id);
   if (!habit) throw new Error("Failed to update habit");
   return habit;
+}
+
+function frequencyForDays(days: Weekday[]): HabitFrequency {
+  const key = days.join(",");
+  if (key === WEEKDAYS.slice(0, 5).join(",")) return "weekdays";
+  if (key === WEEKDAYS.slice(5).join(",")) return "weekends";
+  return "daily";
 }
 
 export async function remove(id: string): Promise<void> {
@@ -141,6 +188,9 @@ export async function toggleToday(id: string): Promise<Habit> {
   const db = await getDatabase();
   const habit = await findById(id);
   if (!habit) throw new Error("Habit not found");
+  if (!isScheduledToday(habit.scheduleDays)) {
+    throw new Error("This habit is not scheduled for today");
+  }
   const today = getLocalDateKey();
 
   if (habit.completedToday) {
