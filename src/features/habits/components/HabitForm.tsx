@@ -202,11 +202,26 @@ export function HabitForm({
             </Text>
             <View style={styles.timeColumns}>
               {[
-                { label: "Hour", options: hourOptions, value: draftHour, onChange: setDraftHour },
-                { label: "Minute", options: minuteOptions, value: draftMinute, onChange: setDraftMinute },
+                {
+                  label: "Hour",
+                  options: hourOptions,
+                  value: draftHour,
+                  onChange: setDraftHour,
+                },
+                {
+                  label: "Minute",
+                  options: minuteOptions,
+                  value: draftMinute,
+                  onChange: setDraftMinute,
+                },
               ].map(({ label, options, value, onChange }) => (
                 <View key={label} style={styles.timeColumn}>
-                  <Text style={[styles.timeColumnLabel, { color: colors.textMuted }]}>
+                  <Text
+                    style={[
+                      styles.timeColumnLabel,
+                      { color: colors.textMuted },
+                    ]}
+                  >
                     {label}
                   </Text>
                   <FlatList
@@ -214,7 +229,11 @@ export function HabitForm({
                     extraData={value}
                     keyExtractor={(item) => item}
                     initialScrollIndex={Math.max(0, options.indexOf(value) - 2)}
-                    getItemLayout={(_, index) => ({ length: 52, offset: 52 * index, index })}
+                    getItemLayout={(_, index) => ({
+                      length: 52,
+                      offset: 52 * index,
+                      index,
+                    })}
                     renderItem={({ item }) => {
                       const selected = item === value;
                       return (
@@ -226,12 +245,21 @@ export function HabitForm({
                           style={[
                             styles.timeOption,
                             {
-                              backgroundColor: selected ? colors.primarySoft : colors.surface,
-                              borderColor: selected ? colors.primary : colors.border,
+                              backgroundColor: selected
+                                ? colors.primarySoft
+                                : colors.surface,
+                              borderColor: selected
+                                ? colors.primary
+                                : colors.border,
                             },
                           ]}
                         >
-                          <Text style={{ color: selected ? colors.primary : colors.text, fontWeight: "600" }}>
+                          <Text
+                            style={{
+                              color: selected ? colors.primary : colors.text,
+                              fontWeight: "600",
+                            }}
+                          >
                             {item}
                           </Text>
                         </Pressable>
@@ -324,10 +352,26 @@ const styles = StyleSheet.create({
   },
   timeSheet: { maxHeight: "72%", borderRadius: 22, padding: 18 },
   timeTitle: { fontSize: 20, fontWeight: "700", marginBottom: 16 },
-  timePreview: { fontSize: 32, fontWeight: "700", textAlign: "center", marginBottom: 16 },
-  timeColumns: { flexDirection: "row", gap: 16, height: 260, flexShrink: 1, marginBottom: 16 },
+  timePreview: {
+    fontSize: 32,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  timeColumns: {
+    flexDirection: "row",
+    gap: 16,
+    height: 260,
+    flexShrink: 1,
+    marginBottom: 16,
+  },
   timeColumn: { flex: 1 },
-  timeColumnLabel: { textAlign: "center", fontSize: 14, fontWeight: "600", marginBottom: 8 },
+  timeColumnLabel: {
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
   timeOption: {
     height: 44,
     margin: 4,
