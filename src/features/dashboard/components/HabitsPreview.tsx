@@ -8,6 +8,15 @@ export function HabitsPreview() {
   const router = useRouter();
   const { colors } = useAppTheme();
   const { habits, isLoading, error, toggleHabit } = useHabitStore();
+  const todaysHabits = habits
+    .filter((habit) => isScheduledToday(habit.scheduleDays))
+    .sort((first, second) => {
+      if (first.completedToday !== second.completedToday) {
+        return Number(first.completedToday) - Number(second.completedToday);
+      }
+
+      return first.scheduleTime.localeCompare(second.scheduleTime);
+    });
 
   if (isLoading || error) {
     return (
@@ -47,6 +56,25 @@ export function HabitsPreview() {
     );
   }
 
+  if (!todaysHabits.length) {
+    return (
+      <View
+        style={[
+          styles.card,
+          styles.empty,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>
+          All clear today
+        </Text>
+        <Text style={[styles.emptyCopy, { color: colors.textMuted }]}>
+          No habits are scheduled for today.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View
       style={[
@@ -54,19 +82,17 @@ export function HabitsPreview() {
         { backgroundColor: colors.surface, borderColor: colors.border },
       ]}
     >
-      {habits.slice(0, 3).map((habit) => (
+      {todaysHabits.map((habit) => (
         <Pressable
           key={habit.id}
           onPress={() => router.push(`../habits/${habit.id}`)}
           style={({ pressed }) => [styles.row, pressed && styles.pressed]}
         >
           <Pressable
-            disabled={!isScheduledToday(habit.scheduleDays)}
             onPress={() => toggleHabit(habit.id)}
             style={[
               styles.check,
               { borderColor: colors.border },
-              !isScheduledToday(habit.scheduleDays) && styles.disabled,
               habit.completedToday && {
                 backgroundColor: colors.primary,
                 borderColor: colors.primary,
@@ -133,5 +159,4 @@ const styles = StyleSheet.create({
   streak: { fontSize: 11, marginTop: 3 },
   done: { textDecorationLine: "line-through", opacity: 0.5 },
   pressed: { opacity: 0.6 },
-  disabled: { opacity: 0.3 },
 });
