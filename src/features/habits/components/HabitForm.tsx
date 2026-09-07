@@ -159,6 +159,9 @@ export function HabitForm({
       </View>
 
       <Text style={[styles.label, { color: colors.text }]}>Time</Text>
+      <Text style={[styles.notificationHint, { color: colors.textMuted }]}>
+        You’ll get a reminder 10 minutes before and an alert at this time.
+      </Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Scheduled time ${scheduleTime}`}
@@ -331,6 +334,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderRadius: 12,
+  },
+  notificationHint: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: -3,
+    marginBottom: 11,
   },
   timeButton: {
     minHeight: 58,
