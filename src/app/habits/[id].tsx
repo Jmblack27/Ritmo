@@ -20,7 +20,7 @@ export default function HabitDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useAppTheme();
-  const { habits, isLoading, updateHabit, deleteHabit, toggleHabit } =
+  const { habits, isLoading, loadHabits, updateHabit, deleteHabit, toggleHabit } =
     useHabitStore();
   const habit = habits.find((item) => item.id === id);
   const scheduledToday = habit ? isScheduledToday(habit.scheduleDays) : false;
@@ -29,6 +29,10 @@ export default function HabitDetailScreen() {
   const [scheduleDays, setScheduleDays] = useState<Weekday[]>([...WEEKDAYS]);
   const [scheduleTime, setScheduleTime] = useState("09:00");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!habit) void loadHabits();
+  }, [habit, loadHabits]);
 
   useEffect(() => {
     if (!habit) return;
@@ -94,10 +98,10 @@ export default function HabitDetailScreen() {
       <View style={styles.heading}>
         <View style={styles.headingText}>
           <Text style={[styles.kicker, { color: colors.primary }]}>
-            DETALLES DEL HÁBITO
+            HABIT DETAILS
           </Text>
           <Text style={[styles.title, { color: colors.text }]}>
-            Mantén tu ritmo
+            Keep your rhythm
           </Text>
         </View>
         <Pressable

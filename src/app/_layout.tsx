@@ -1,6 +1,32 @@
 import { ThemeProvider, useAppTheme } from "@/theme/theme";
-import { Stack } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { type Href, Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+
+function useNotificationNavigation() {
+  useEffect(() => {
+    const openNotification = (notification: Notifications.Notification) => {
+      const url = notification.request.content.data?.url;
+
+      if (typeof url === "string" && /^\/habits\/[^/]+$/.test(url)) {
+        router.push(url as Href);
+      }
+    };
+
+    const lastResponse = Notifications.getLastNotificationResponse();
+    if (lastResponse) {
+      openNotification(lastResponse.notification);
+      Notifications.clearLastNotificationResponse();
+    }
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => openNotification(response.notification),
+    );
+
+    return () => subscription.remove();
+  }, []);
+}
 export default function RootLayout() {
   return (
     <ThemeProvider>
@@ -9,6 +35,7 @@ export default function RootLayout() {
   );
 }
 function ThemedNavigation() {
+  useNotificationNavigation();
   const { mode, colors } = useAppTheme();
   return (
     <>

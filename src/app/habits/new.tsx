@@ -60,7 +60,13 @@ export default function NewHabitScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 22, paddingTop: 32, paddingBottom: 40 },
+  container: {
+    flexGrow: 1,
+    padding: 22,
+    paddingTop: 32,
+    paddingBottom: 42,
+    marginBottom: 20,
+  },
   kicker: { fontSize: 11, fontWeight: "800", letterSpacing: 1.2 },
   title: {
     fontSize: 28,
