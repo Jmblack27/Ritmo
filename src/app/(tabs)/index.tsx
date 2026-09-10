@@ -43,7 +43,10 @@ export default function HomeScreen() {
           <HabitsPreview />
         </View>
       </ScrollView>
-      <QuickAddButton onPress={() => router.push("../tasks/new")} />
+      <QuickAddButton
+        onCreateTask={() => router.push("/tasks/new")}
+        onCreateHabit={() => router.push("/habits/new")}
+      />
     </View>
   );
 }
